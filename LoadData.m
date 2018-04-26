@@ -98,15 +98,32 @@ for ii=1:numChans
     bandpassData(:,ii) = temp(1:dsBPRate:timepoints);
 end
 
+auxFiles = dir('*AUX*.continuous');
+numAUX = length(auxFiles);
+
+if numAUX>0
+    auxData = zeros(lpLen,numAUX);
+    
+    for ii=1:numAUX
+        [temp,~,~] = load_open_ephys_data_faster(auxFiles(ii).name);
+        temp = filtfilt(notchb,notcha,temp);
+        temp = filtfilt(lowb,lowa,temp);
+        auxData(:,ii) = temp(1:dsLPRate:timepoints);
+    end
+    
+else
+   auxData = [];
+end
+
 temp = pwd;
 index = regexp(temp,'/');
 filename = sprintf('CompiledData_%s.mat',temp(index(end)+1:end));
 if keepBandpass == 0
     save(filename,'numChans','rawFiles','events',...
-        'eventTimes','eventInfo','lowpassTimes','lowpassData');
+        'eventTimes','eventInfo','lowpassTimes','lowpassData','auxData');
 else
     save(filename,'numChans','rawFiles','events','eventTimes','eventInfo',...
-        'lowpassTimes','lowpassData','bandpassTimes','bandpassData');
+        'lowpassTimes','lowpassData','bandpassTimes','bandpassData','auxData');
 end
 
 end
