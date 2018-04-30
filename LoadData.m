@@ -98,7 +98,7 @@ for ii=1:numChans
     bandpassData(:,ii) = temp(1:dsBPRate:timepoints);
 end
 
-auxFiles = dir('*AUX*.continuous');
+auxFiles = dir('*A*.continuous');
 numAUX = length(auxFiles);
 
 if numAUX>0
@@ -109,6 +109,22 @@ if numAUX>0
         temp = filtfilt(notchb,notcha,temp);
         temp = filtfilt(lowb,lowa,temp);
         auxData(:,ii) = temp(1:dsLPRate:timepoints);
+    end
+    
+    for ii=1:numAUX
+        if ~isempty(regexp(auxFiles(ii).name,'ADC1','once'))
+           temp = auxData(:,ii);
+           temp(end-75:end) = mean(temp(end-150:end-76));
+           fitobj = fit(lowpassTimes,temp,'fourier4');
+           baseline = feval(fitobj,lowpassTimes);
+           temp = abs(temp-baseline);
+           
+           q = quantile(temp,0.25);
+           temp(temp<q) = 0;
+           
+           temp = smooth(temp,250);
+           auxData(:,ii) = temp;
+        end
     end
     
 else
