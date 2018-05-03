@@ -135,11 +135,12 @@ temp = pwd;
 index = regexp(temp,'/');
 filename = sprintf('CompiledData_%s.mat',temp(index(end)+1:end));
 if keepBandpass == 0
-    save(filename,'numChans','rawFiles','events',...
+    save(filename,'numChans','rawFiles','events','lpFs',...
         'eventTimes','eventInfo','lowpassTimes','lowpassData','auxData');
 else
     save(filename,'numChans','rawFiles','events','eventTimes','eventInfo',...
-        'lowpassTimes','lowpassData','bandpassTimes','bandpassData','auxData');
+        'lowpassTimes','lowpassData','bandpassTimes','bandpassData','auxData',...
+        'lpFs','bpFs');
 end
 
 end
