@@ -115,15 +115,16 @@ if numAUX>0
         if ~isempty(regexp(auxFiles(ii).name,'ADC1','once'))
            temp = auxData(:,ii);
            temp(end-75:end) = mean(temp(end-150:end-76));
-           fitobj = fit(lowpassTimes,temp,'fourier4');
+           fitobj = fit(lowpassTimes,temp,'fourier8');
            baseline = feval(fitobj,lowpassTimes);
            temp = abs(temp-baseline);
            
-           q = quantile(temp,0.25);
-           temp(temp<q) = 0;
+           temp = smooth(temp,250)-smooth(temp,5e3);
            
-           temp = smooth(temp,250);
+           temp = max(temp,0);
+           
            auxData(:,ii) = temp;
+%            figure;plot(temp(1000:50000));
         end
     end
     
