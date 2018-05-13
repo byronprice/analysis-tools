@@ -77,9 +77,9 @@ bpLen = length(1:dsBPRate:timepoints);
 n = 2;
 [lowb,lowa] = butter(n,cutoff/(Fs/2));
 
-wo = 60/(Fs/2);
-bw = wo/n;
-[notchb,notcha] = iirnotch(wo,bw);
+% wo = 60/(Fs/2);
+% bw = wo/n;
+% [notchb,notcha] = iirnotch(wo,bw);
 
 d = designfilt('bandpassiir','FilterOrder',n,'HalfPowerFrequency1',cutoff+100,...
     'HalfPowerFrequency2',4000,'SampleRate',Fs);
@@ -89,9 +89,9 @@ lowpassData = zeros(lpLen,numChans);
 lowpassTimes = timestamps(1:dsLPRate:timepoints);
 bandpassTimes = timestamps(1:dsBPRate:timepoints);
 for ii=1:numChans
-    temp = filtfilt(notchb,notcha,allData(:,ii));
+%     temp = filtfilt(notchb,notcha,allData(:,ii));
 %     temp = filtfilt(notchb2,notcha2,temp);
-    temp = filtfilt(lowb,lowa,temp);
+    temp = filtfilt(lowb,lowa,allData(:,ii));
     lowpassData(:,ii) = temp(1:dsLPRate:timepoints);
     
     temp = filtfilt(d,allData(:,ii));
@@ -106,7 +106,7 @@ if numAUX>0
     
     for ii=1:numAUX
         [temp,~,~] = load_open_ephys_data_faster(auxFiles(ii).name);
-        temp = filtfilt(notchb,notcha,temp);
+%         temp = filtfilt(notchb,notcha,temp);
         temp = filtfilt(lowb,lowa,temp);
         auxData(:,ii) = temp(1:dsLPRate:timepoints);
     end
