@@ -115,11 +115,13 @@ if numAUX>0
         if ~isempty(regexp(auxFiles(ii).name,'ADC1','once'))
            temp = auxData(:,ii);
            temp(end-75:end) = mean(temp(end-150:end-76));
-           fitobj = fit(lowpassTimes,temp,'fourier8');
-           baseline = feval(fitobj,lowpassTimes);
+           %fitobj = fit(lowpassTimes,temp,'fourier8');
+          % baseline = feval(fitobj,lowpassTimes);
+           baseline = smooth(temp,2e3);
+           % temp = abs(temp-baseline);
            temp = abs(temp-baseline);
            
-           temp = smooth(temp,250)-smooth(temp,5e3);
+           temp = smooth(temp,200)-smooth(temp,2e3);
            
            temp = max(temp,0);
            
