@@ -90,7 +90,6 @@ lowpassTimes = timestamps(1:dsLPRate:timepoints);
 bandpassTimes = timestamps(1:dsBPRate:timepoints);
 for ii=1:numChans
 %     temp = filtfilt(notchb,notcha,allData(:,ii));
-%     temp = filtfilt(notchb2,notcha2,temp);
     temp = filtfilt(lowb,lowa,allData(:,ii));
     lowpassData(:,ii) = temp(1:dsLPRate:timepoints);
     
@@ -103,11 +102,13 @@ numAUX = length(auxFiles);
 
 if numAUX>0
     auxData = zeros(lpLen,numAUX);
-    
+%     d = designfilt('bandpassiir','FilterOrder',6,'HalfPowerFrequency1',2,...
+%     'HalfPowerFrequency2',50,'SampleRate',lpFs);
     for ii=1:numAUX
         [temp,~,~] = load_open_ephys_data_faster(auxFiles(ii).name);
 %         temp = filtfilt(notchb,notcha,temp);
         temp = filtfilt(lowb,lowa,temp);
+%         temp = filtfilt(d,temp);
         auxData(:,ii) = temp(1:dsLPRate:timepoints);
     end
     
@@ -115,17 +116,32 @@ if numAUX>0
         if ~isempty(regexp(auxFiles(ii).name,'ADC1','once'))
            temp = auxData(:,ii);
            temp(end-75:end) = mean(temp(end-150:end-76));
-           %fitobj = fit(lowpassTimes,temp,'fourier8');
-          % baseline = feval(fitobj,lowpassTimes);
-           baseline = smooth(temp,2e3);
-           % temp = abs(temp-baseline);
-           temp = abs(temp-baseline);
            
-           temp = smooth(temp,200)-smooth(temp,2e3);
+           checkTime = 0.5*lpFs;
+           tempMov = zeros(lpLen,1);
            
-           temp = max(temp,0);
-           
-           auxData(:,ii) = temp;
+           for jj=1:lpLen
+               begin = max(jj-checkTime/2,1);
+               finish = min(jj+checkTime/2,lpLen);
+               y = fft(temp(begin:finish));
+               fftLen = ceil(length(y)/2);
+               freqs = linspace(0,lpFs/2,fftLen);
+               lowInd = 2;
+               [~,highInd] = min(abs(50-freqs));
+               y = y(1:fftLen);
+               power = log(y.*conj(y));
+               tempMov(jj) = mean(power(lowInd:highInd));
+           end
+           tempMov = tempMov-smooth(tempMov,30*lpFs);
+           gm = fitgmdist(tempMov,2);
+           [mu,ind] = min(gm.mu);
+           sigma = squeeze(gm.Sigma);
+           sigma = sigma(ind);
+           baseline = mu+3*sigma;
+           moveSignal = max(tempMov-baseline,0);
+           moveSignal = smooth(moveSignal,200);
+           moveSignal(moveSignal<0.02) = 0;
+           auxData(:,ii) = moveSignal;
 %            figure;plot(temp(1000:50000));
         end
     end
