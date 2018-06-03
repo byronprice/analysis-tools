@@ -127,7 +127,7 @@ if numAUX>0
                fftLen = ceil(length(y)/2);
                freqs = linspace(0,lpFs/2,fftLen);
                lowInd = 2;
-               [~,highInd] = min(abs(50-freqs));
+               [~,highInd] = min(abs(15-freqs));
                y = y(1:fftLen);
                power = log(y.*conj(y));
                tempMov(jj) = mean(power(lowInd:highInd));
