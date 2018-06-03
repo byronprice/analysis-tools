@@ -126,13 +126,13 @@ if numAUX>0
                y = fft(temp(begin:finish));
                fftLen = ceil(length(y)/2);
                freqs = linspace(0,lpFs/2,fftLen);
-               lowInd = 2;
+               lowInd = 3;
                [~,highInd] = min(abs(15-freqs));
                y = y(1:fftLen);
                power = log(y.*conj(y));
                tempMov(jj) = mean(power(lowInd:highInd));
            end
-           tempMov = tempMov-smooth(tempMov,30*lpFs);
+           %tempMov = tempMov-smooth(tempMov,30*lpFs);
            gm = fitgmdist(tempMov,2);
            [mu,ind] = min(gm.mu);
            sigma = squeeze(gm.Sigma);
@@ -140,7 +140,7 @@ if numAUX>0
            baseline = mu+3*sigma;
            moveSignal = max(tempMov-baseline,0);
            moveSignal = smooth(moveSignal,200);
-           moveSignal(moveSignal<0.02) = 0;
+           moveSignal(moveSignal<0.01) = 0;
            auxData(:,ii) = moveSignal;
 %            figure;plot(temp(1000:50000));
         end
