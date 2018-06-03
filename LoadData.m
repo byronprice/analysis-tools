@@ -133,7 +133,7 @@ if numAUX>0
                tempMov(jj) = mean(power(lowInd:highInd));
            end
            %tempMov = tempMov-smooth(tempMov,30*lpFs);
-           gm = fitgmdist(tempMov,2);
+           gm = fitgmdist(tempMov,3);
            [mu,ind] = min(gm.mu);
            sigma = squeeze(gm.Sigma);
            sigma = sigma(ind);
