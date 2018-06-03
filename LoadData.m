@@ -82,7 +82,7 @@ n = 2;
 % [notchb,notcha] = iirnotch(wo,bw);
 
 d = designfilt('bandpassiir','FilterOrder',n,'HalfPowerFrequency1',cutoff+100,...
-    'HalfPowerFrequency2',4000,'SampleRate',Fs);
+    'HalfPowerFrequency2',5000,'SampleRate',Fs);
 
 bandpassData = zeros(bpLen,numChans);
 lowpassData = zeros(lpLen,numChans);
