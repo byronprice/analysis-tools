@@ -105,17 +105,24 @@ if numAUX>0
 %     d = designfilt('bandpassiir','FilterOrder',6,'HalfPowerFrequency1',2,...
 %     'HalfPowerFrequency2',50,'SampleRate',lpFs);
     for ii=1:numAUX
-        [temp,~,~] = load_open_ephys_data_faster(auxFiles(ii).name);
-%         temp = filtfilt(notchb,notcha,temp);
-        temp = filtfilt(lowb,lowa,temp);
-%         temp = filtfilt(d,temp);
-        auxData(:,ii) = temp(1:dsLPRate:timepoints);
+        [temp,~,~] = load_open_ephys_data_faster(auxFiles(ii).name);\
+        if ~isempty(regexp(auxFiles(ii).name,'ADC1','once'))
+    %         temp = filtfilt(notchb,notcha,temp);
+            temp = filtfilt(lowb,lowa,temp);
+    %         temp = filtfilt(d,temp);
+            auxData(:,ii) = temp(1:dsLPRate:timepoints);
+        elseif ~isempty(regexp(auxFiles(ii).name,'ADC2','once'))
+            threshold = 2.5;
+            inds = find(temp(1:end-1)>threshold & temp(2:end)<threshold);
+            newinds = round(inds./(Fs/lpFs));
+            auxData(newinds,ii) = 1;
+        end
     end
-    
+
     for ii=1:numAUX
         if ~isempty(regexp(auxFiles(ii).name,'ADC1','once'))
            temp = auxData(:,ii);
-           temp(end-75:end) = mean(temp(end-150:end-76));
+           temp(end-100:end) = mean(temp(end-200:end-101));
            
            checkTime = 0.5*lpFs;
            tempMov = zeros(lpLen,1);
@@ -127,7 +134,7 @@ if numAUX>0
                fftLen = ceil(length(y)/2);
                freqs = linspace(0,lpFs/2,fftLen);
                lowInd = 3;
-               [~,highInd] = min(abs(15-freqs));
+               [~,highInd] = min(abs(20-freqs));
                y = y(1:fftLen);
                power = log(y.*conj(y));
                tempMov(jj) = mean(power(lowInd:highInd));
@@ -139,13 +146,12 @@ if numAUX>0
            sigma = sigma(ind);
            baseline = mu+3*sigma;
            moveSignal = max(tempMov-baseline,0);
-           moveSignal = smooth(moveSignal,200);
-           moveSignal(moveSignal<0.01) = 0;
+%            moveSignal = smooth(moveSignal,200);
+%            moveSignal(moveSignal<0.01) = 0;
            auxData(:,ii) = moveSignal;
 %            figure;plot(temp(1000:50000));
         end
     end
-    
 else
    auxData = [];
 end
