@@ -105,7 +105,7 @@ if numAUX>0
 %     d = designfilt('bandpassiir','FilterOrder',6,'HalfPowerFrequency1',2,...
 %     'HalfPowerFrequency2',50,'SampleRate',lpFs);
     for ii=1:numAUX
-        [temp,~,~] = load_open_ephys_data_faster(auxFiles(ii).name);\
+        [temp,~,~] = load_open_ephys_data_faster(auxFiles(ii).name);
         if ~isempty(regexp(auxFiles(ii).name,'ADC1','once'))
     %         temp = filtfilt(notchb,notcha,temp);
             temp = filtfilt(lowb,lowa,temp);
