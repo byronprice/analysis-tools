@@ -112,8 +112,8 @@ if numAUX>0
     %         temp = filtfilt(d,temp);
             auxData(:,ii) = temp(1:dsLPRate:timepoints);
         elseif ~isempty(regexp(auxFiles(ii).name,'ADC2','once'))
-            threshold = 2.5;
-            inds = find(temp(1:end-1)>threshold & temp(2:end)<threshold);
+            threshold = 0.75;
+            inds = find(temp(1:end-1)<threshold & temp(2:end)>threshold);
             newinds = round(inds./(Fs/lpFs));
             auxData(newinds,ii) = 1;
         end
