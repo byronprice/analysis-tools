@@ -140,15 +140,21 @@ if numAUX>0
                tempMov(jj) = mean(power(lowInd:highInd));
            end
            %tempMov = tempMov-smooth(tempMov,30*lpFs);
-           gm = fitgmdist(tempMov,3);
-           [mu,ind] = min(gm.mu);
-           sigma = squeeze(gm.Sigma);
-           sigma = sigma(ind);
-           baseline = mu+3*sigma;
-           moveSignal = max(tempMov-baseline,0);
-%            moveSignal = smooth(moveSignal,200);
-%            moveSignal(moveSignal<0.01) = 0;
-           auxData(:,ii) = moveSignal;
+           try
+               gm = fitgmdist(tempMov,3);
+               [mu,ind] = min(gm.mu);
+               sigma = squeeze(gm.Sigma);
+               sigma = sigma(ind);
+               baseline = mu+3*sigma;
+               moveSignal = max(tempMov-baseline,0);
+               %            moveSignal = smooth(moveSignal,200);
+               %            moveSignal(moveSignal<0.01) = 0;
+               auxData(:,ii) = moveSignal;
+           catch
+               baseline = mean(tempMov)+std(tempMov);
+               moveSignal = max(tempMov-baseline,0);
+               auxData(:,ii) = moveSignal;
+           end
 %            figure;plot(temp(1000:50000));
         end
     end
