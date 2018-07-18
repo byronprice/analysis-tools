@@ -114,7 +114,7 @@ if numAUX>0
         elseif ~isempty(regexp(auxFiles(ii).name,'ADC2','once'))
             threshold = 0.75;
             inds = find(temp(1:end-1)<threshold & temp(2:end)>threshold);
-            newinds = round(inds./(Fs/lpFs));
+            newinds = ceil(inds./(Fs/lpFs));
             auxData(newinds,ii) = 1;
         end
     end
