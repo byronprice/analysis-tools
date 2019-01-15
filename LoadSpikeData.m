@@ -64,7 +64,10 @@ auxFiles = dir('*A*.continuous');
 numAUX = length(auxFiles);
 
 if numAUX>0 % >0
-    lpFs = 1000;dsLPRate = Fs/lpFs;
+    cutoff = 200;lpFs = 1000;dsLPRate = Fs/lpFs;
+    n = 2;
+    [lowb,lowa] = butter(n,cutoff/(Fs/2));
+    
     [temp,timestamps,~] = load_open_ephys_data_faster(auxFiles(ii).name);
     timepoints = length(temp);
     lpLen = length(1:dsLPRate:timepoints);
