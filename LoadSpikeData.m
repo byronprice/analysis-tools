@@ -63,10 +63,14 @@ Fs = eventInfo.header.sampleRate;
 auxFiles = dir('*A*.continuous');
 numAUX = length(auxFiles);
 
-if numAUX==0 % >0
+if numAUX>0 % >0
+    lpFs = 1000;dsLPRate = Fs/lpFs;
+    [temp,timestamps,~] = load_open_ephys_data_faster(auxFiles(ii).name);
+    timepoints = length(temp);
+    lpLen = length(1:dsLPRate:timepoints);
+    lowpassTimes = timestamps(1:dsLPRate:timepoints);
+    
     auxData = zeros(lpLen,numAUX);
-%     d = designfilt('bandpassiir','FilterOrder',6,'HalfPowerFrequency1',2,...
-%     'HalfPowerFrequency2',50,'SampleRate',lpFs);
     for ii=1:numAUX
         [temp,~,~] = load_open_ephys_data_faster(auxFiles(ii).name);
         if ~isempty(regexp(auxFiles(ii).name,'ADC1','once'))
@@ -129,5 +133,5 @@ temp = pwd;
 index = regexp(temp,'/');
 filename = sprintf('CompiledSpikeData_%s.mat',temp(index(end)+1:end));
 save(filename,'numChans','rawFiles','events','Fs',...
-    'eventTimes','eventInfo','allSpikeData','auxData');
+    'eventTimes','eventInfo','allSpikeData','auxData','lpFs','lowpassTimes');
 end
