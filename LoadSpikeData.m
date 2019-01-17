@@ -68,7 +68,7 @@ if numAUX>0 % >0
     n = 2;
     [lowb,lowa] = butter(n,cutoff/(Fs/2));
     
-    [temp,timestamps,~] = load_open_ephys_data_faster(auxFiles(ii).name);
+    [temp,timestamps,~] = load_open_ephys_data_faster(auxFiles(1).name);
     timepoints = length(temp);
     lpLen = length(1:dsLPRate:timepoints);
     lowpassTimes = timestamps(1:dsLPRate:timepoints);
