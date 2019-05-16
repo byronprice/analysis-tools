@@ -1,4 +1,4 @@
-function [] = LoadData(folder,keepBandpass)
+function [] = LoadFullData(folder)
 % LoadData.m
 %  Gavornik Lab open-ephys setup
 % go into a folder and extract open ephys data, convert to MATLAB format,
@@ -6,33 +6,66 @@ function [] = LoadData(folder,keepBandpass)
 %  filtering to get spiking data
 %INPUTS:
 %        folder - directory to go into, defaults to current directory
-%        keepBandpass - logical (1 or 0) to save bandpass data or not
-%                 if you just want the LFP, then you type 0, defaults to 0
 %OUTPUTS:
-%        a file named CompiledData_foldername.mat 
+%        a file named CompiledRawData_foldername.mat 
 
 if nargin<1
     folder = pwd;
-    keepBandpass = 0;
-elseif nargin<2
-    keepBandpass = 0;
 end
 
 cd(folder);
 
+[events,eventTimes,eventInfo] = load_open_ephys_data_faster('all_channels.events');
+
 rawFiles = dir('*CH*.continuous');
-numChans = length(rawFiles);
-[data1,timestamps,~] = loadAndCorrectPhase(rawFiles(1).name,1);
+chansPerTrode = length(rawFiles);numChans = chansPerTrode;
+allData = cell(chansPerTrode,1);
 
-allData = zeros(length(timestamps),numChans);
-allData(:,1) = data1;
+for ii=1:chansPerTrode
+   [data,timestamps] = load_open_ephys_data_faster(rawFiles(ii).name);
+   allData{ii} = data;
+end
+clear data;
 
-for ii=2:numChans
-   [data,~,~] = loadAndCorrectPhase(rawFiles(ii).name,1); 
-   allData(:,ii) = data;
+totalTime = max(timestamps)-min(timestamps)+10/1000;
+startTime = min(timestamps);
+
+timepoints = length(timestamps);
+
+try 
+    fullData = zeros(timepoints,chansPerTrode);
+    
+    for ii=1:chansPerTrode
+        fullData(:,ii) = allData{ii};
+    end
+    clear allData;
+    
+    writemda(fullData',sprintf('raw.full.mda'),'float64');
+    clear fullData;
+catch
+    chansPerTrode = 6;
+    
+    numIter = ceil(numChans/chansPerTrode);
+    inds = 1:chansPerTrode;
+    for jj=1:numIter
+        fullData = zeros(timepoints,chansPerTrode);
+        for ii=1:chansPerTrode
+            fullData(:,ii) = allData{inds(ii)};
+        end
+        
+        writemda(fullData',sprintf('raw.full%d.mda',jj),'float64');
+        clear fullData;
+        if jj<numIter-1
+            inds = inds+chansPerTrode-1;
+        else
+            inds = numChans-chansPerTrode+1:numChans;
+        end
+    end
+    clear allData;
 end
 
-[events,eventTimes,eventInfo] = load_open_ephys_data_faster('all_channels.events');
+Fs = eventInfo.header.sampleRate;
+% save('RecordingInfo.mat','totalTime','startTime','Fs','timestamps','chansPerTrode');
 
 digEvents = [];
 digTimes = [];
@@ -65,37 +98,17 @@ end
 events = digEvents;
 eventTimes = digTimes;
 
-[timepoints,numChans] = size(allData);
-Fs = eventInfo.header.sampleRate;
 
 % notch, low pass, downsample to get LFP
 % bandpass to get spiking
 cutoff = 200;lpFs = 1000;dsLPRate = Fs/lpFs;
 lpLen = length(1:dsLPRate:timepoints);
-bpFs = 10000;dsBPRate = Fs/bpFs;
-bpLen = length(1:dsBPRate:timepoints);
 n = 2;
 [lowb,lowa] = butter(n,cutoff/(Fs/2));
 
-% wo = 60/(Fs/2);
-% bw = wo/n;
-% [notchb,notcha] = iirnotch(wo,bw);
-
-d = designfilt('bandpassiir','FilterOrder',n,'HalfPowerFrequency1',cutoff+100,...
-    'HalfPowerFrequency2',6000,'SampleRate',Fs);
-
-bandpassData = zeros(bpLen,numChans);
-lowpassData = zeros(lpLen,numChans);
 lowpassTimes = timestamps(1:dsLPRate:timepoints);
-bandpassTimes = timestamps(1:dsBPRate:timepoints);
-for ii=1:numChans
-%     temp = filtfilt(notchb,notcha,allData(:,ii));
-    temp = filtfilt(lowb,lowa,allData(:,ii));
-    lowpassData(:,ii) = temp(1:dsLPRate:timepoints);
-    
-    temp = filtfilt(d,allData(:,ii));
-    bandpassData(:,ii) = temp(1:dsBPRate:timepoints);
-end
+
+clear timestamps;
 
 auxFiles = dir('*A*.continuous');
 numAUX = length(auxFiles);
@@ -164,14 +177,7 @@ end
 
 temp = pwd;
 index = regexp(temp,'/');
-filename = sprintf('CompiledData_%s.mat',temp(index(end)+1:end));
-if keepBandpass == 0
-    save(filename,'numChans','rawFiles','events','lpFs',...
-        'eventTimes','eventInfo','lowpassTimes','lowpassData','auxData');
-else
-    save(filename,'numChans','rawFiles','events','eventTimes','eventInfo',...
-        'lowpassTimes','lowpassData','bandpassTimes','bandpassData','auxData',...
-        'lpFs','bpFs');
-end
-
+filename = sprintf('CompiledRawData_%s.mat',temp(index(end)+1:end));
+save(filename,'totalTime','startTime','Fs','chansPerTrode','numChans','rawFiles','events','lpFs',...
+        'eventTimes','eventInfo','lowpassTimes','auxData','Fs','timepoints');
 end
