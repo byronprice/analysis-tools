@@ -71,7 +71,7 @@ digEvents = [];
 digTimes = [];
 
 diffs = [5;diff(eventTimes)];
-inds = find(~(diffs<=0.005));
+inds = find(~(diffs<=0.01));
 
 for ii=1:length(inds)
     digTimes = [digTimes;eventTimes(inds(ii))];
