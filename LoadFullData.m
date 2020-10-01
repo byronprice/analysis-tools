@@ -179,5 +179,5 @@ temp = pwd;
 index = regexp(temp,'/');
 filename = sprintf('CompiledRawData_%s.mat',temp(index(end)+1:end));
 save(filename,'totalTime','startTime','Fs','chansPerTrode','numChans','rawFiles','events','lpFs',...
-        'eventTimes','eventInfo','lowpassTimes','auxData','Fs','timepoints','var','-v7.3');
+        'eventTimes','eventInfo','lowpassTimes','auxData','Fs','timepoints','-v7.3');
 end
