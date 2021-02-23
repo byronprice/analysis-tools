@@ -91,7 +91,7 @@ for ii=1:length(inds)
     else
         binrep(currentEvents) = 1;
     end
-    
+
     digEvents = [digEvents;bi2de(binrep)];
 end
 
@@ -126,6 +126,11 @@ if numAUX>0 % >0
             auxData(:,ii) = temp(1:dsLPRate:timepoints);
         elseif ~isempty(regexp(auxFiles(ii).name,'ADC2','once'))
             threshold = 0.75;
+            inds = find(temp(1:end-1)<threshold & temp(2:end)>threshold);
+            newinds = ceil(inds./(Fs/lpFs));
+            auxData(newinds,ii) = 1;
+        elseif ~isempty(regexp(auxFiles(ii).name,'ADC3','once'))
+            threshold = 4;
             inds = find(temp(1:end-1)<threshold & temp(2:end)>threshold);
             newinds = ceil(inds./(Fs/lpFs));
             auxData(newinds,ii) = 1;
